@@ -3,5 +3,8 @@
   "ruby_path": "ruby",
 
   //  which rubocop
-  "rubocop_path": "rubocop"
+  "rubocop_path": "rubocop",
+
+  // Apply pretty ruby on entire file if nothing selected
+  "pretty_ruby_prettify_file_on_empty_selection": false
 }

@@ -3,8 +3,9 @@ from subprocess import Popen, PIPE, STDOUT
 
 class PrettyRubyFormat(sublime_plugin.TextCommand):
   def run(self, edit, args=[]):
-    ruby_path    = self.load_ruby_path()
-    rubocop_path = self.load_rubocop_path()
+    ruby_path              = self.load_ruby_path()
+    rubocop_path           = self.load_rubocop_path()
+    run_on_empty_selection = self.load_run_on_empty_selection_setting()
 
     if(ruby_path == 'ruby'):
       if not self.execute_system_command('which ruby', False):
@@ -14,9 +15,14 @@ class PrettyRubyFormat(sublime_plugin.TextCommand):
       if not self.execute_system_command('which rubocop', False):
         sublime.error_message("Pretty Ruby\n\nWarning: 'rubocop' command not found.\n\nRun the following command to discover your rubocop path:\n\nwhich rubocop\n\nMore info:\nhttps://github.com/gbaptista/sublime-3-pretty-ruby#custom-rubyrubocop-path")
 
-    for region in self.view.sel():
-      if not region.empty():
+    regions = self.view.sel()
 
+    if all(i.empty() for i in self.view.sel()) and run_on_empty_selection:
+      sublime.status_message('Pretty Ruby | Format: Formatting entire file.')
+      regions = [sublime.Region(0, self.view.size())]
+
+    for region in regions:
+      if not region.empty():
         original_source = self.view.substr(region)
 
         source = original_source
@@ -99,6 +105,14 @@ class PrettyRubyFormat(sublime_plugin.TextCommand):
     else:
       settings = sublime.load_settings('PrettyRuby.sublime-settings')
       return settings.get('rubocop_path')
+
+  def load_run_on_empty_selection_setting(self):
+    settings = sublime.load_settings('Preferences.sublime-settings')
+    if settings.get('pretty_ruby_prettify_file_on_empty_selection'):
+      return settings.get('pretty_ruby_prettify_file_on_empty_selection')
+    else:
+      settings = sublime.load_settings('PrettyRuby.sublime-settings')
+      return settings.get('pretty_ruby_prettify_file_on_empty_selection')
 
   def execute_system_command(self, command, return_error=True):
     if return_error:
